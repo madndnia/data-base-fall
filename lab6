@@ -1,0 +1,108 @@
+-- Create the database
+CREATE DATABASE lab_courses;
+\c lab_courses ;
+
+-- Create tables
+CREATE TABLE courses (
+    course_id SERIAL PRIMARY KEY,
+    course_name VARCHAR(50),
+    course_code VARCHAR(10),
+    credits INTEGER
+);
+
+CREATE TABLE professors (
+    professor_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    department VARCHAR(50)
+);
+
+CREATE TABLE students (
+    student_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    major VARCHAR(50),
+    year_enrolled INTEGER
+);
+
+CREATE TABLE enrollments (
+    enrollment_id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES students,
+    course_id INTEGER REFERENCES courses,
+    professor_id INTEGER REFERENCES professors,
+    enrollment_date DATE
+);
+
+
+INSERT INTO courses (course_name, course_code, credits) VALUES ('Introduction to Computer Science', 'CS101', 4);
+INSERT INTO courses (course_name, course_code, credits) VALUES ('Data Structures and Algorithms', 'CS201', 3);
+INSERT INTO courses (course_name, course_code, credits) VALUES ('Database Management Systems', 'CS301', 4);
+
+INSERT INTO professors (first_name, last_name, department) VALUES ('John', 'Smith', 'Computer Science');
+INSERT INTO professors (first_name, last_name, department) VALUES ('Emily', 'Jones', 'Mathematics');
+INSERT INTO professors (first_name, last_name, department) VALUES ('Michael', 'Davis', 'Physics');
+
+INSERT INTO students (first_name, last_name, major, year_enrolled) VALUES ('Alice', 'Johnson', 'Computer Science', 2020);
+INSERT INTO students (first_name, last_name, major, year_enrolled) VALUES ('Bob', 'Williams', 'Mathematics', 2021);
+INSERT INTO students (first_name, last_name, major, year_enrolled) VALUES ('Eve', 'Brown', 'Physics', 2019);
+
+INSERT INTO enrollments (student_id, course_id, professor_id, enrollment_date) VALUES (1, 1, 1, '2020-09-01');
+INSERT INTO enrollments (student_id, course_id, professor_id, enrollment_date) VALUES (2, 2, 2, '2021-01-15');
+INSERT INTO enrollments (student_id, course_id, professor_id, enrollment_date) VALUES (3, 3, 3, '2019-11-20');
+
+-- Verify the data
+SELECT * FROM courses;
+SELECT * FROM professors;
+SELECT * FROM students;
+SELECT * FROM enrollments;
+
+-- Select each student's first and last name, the course they are enrolled in, and the professor's last name for that course
+SELECT students.first_name, students.last_name, courses.course_name, professors.last_name AS professor_last_name
+FROM enrollments
+JOIN students ON enrollments.student_id = students.student_id
+JOIN courses ON enrollments.course_id = courses.course_id
+JOIN professors ON enrollments.professor_id = professors.professor_id;
+
+--Select the first and last names of students enrolled in courses with more than 3 credits
+SELECT students.first_name, students.last_name
+FROM enrollments
+JOIN students ON enrollments.student_id = students.student_id
+JOIN courses ON enrollments.course_id = courses.course_id
+WHERE courses.credits > 3;
+
+--Select the course name and the number of students enrolled in each course
+SELECT courses.course_name, COUNT(enrollments.student_id) AS student_count
+FROM courses
+LEFT JOIN enrollments ON courses.course_id = enrollments.course_id
+GROUP BY courses.course_id;
+
+--Select the first and last names of professors who teach at least one course
+SELECT DISTINCT professors.first_name, professors.last_name
+FROM professors
+JOIN enrollments ON professors.professor_id = enrollments.professor_id;
+
+--Select the first and last names of students enrolled in courses taught by professors from the 'Computer Science' department
+SELECT students.first_name, students.last_name
+FROM enrollments
+JOIN students ON enrollments.student_id = students.student_id
+JOIN professors ON enrollments.professor_id = professors.professor_id
+WHERE professors.department = 'Computer Science';
+
+--Select the course name, professor's last name, and the total number of credits for courses taught by professors whose last name starts with 'S'
+SELECT courses.course_name, professors.last_name, courses.credits
+FROM courses
+JOIN enrollments ON courses.course_id = enrollments.course_id
+JOIN professors ON enrollments.professor_id = professors.professor_id
+WHERE professors.last_name LIKE 'S%';
+
+--Select all students who enrolled in courses before the year 2022
+SELECT DISTINCT students.first_name, students.last_name
+FROM enrollments
+JOIN students ON enrollments.student_id = students.student_id
+WHERE EXTRACT(YEAR FROM enrollment_date) < 2022;
+
+-- Select the names of all courses that have no students enrolled
+SELECT courses.course_name
+FROM courses
+LEFT JOIN enrollments ON courses.course_id = enrollments.course_id
+WHERE enrollments.student_id IS NULL;
