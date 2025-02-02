@@ -1,0 +1,63 @@
+-- Create the database
+CREATE DATABASE shop_db;
+-- Use the created database
+\c shop_db;
+-- Create the products table
+CREATE TABLE products (
+   product_id serial primary key,
+   product_name varchar(50),
+   price numeric(10, 2)
+);
+-- Create the customers table
+CREATE TABLE customers (
+   customer_id serial primary key,
+   first_name varchar(50),
+   last_name varchar(50),
+   email varchar(100)
+);
+-- Create the orders table
+CREATE TABLE orders (
+   order_id serial primary key,
+   customer_id integer references customers,
+   order_total numeric(10, 2)
+);
+-- Create the order_items table
+CREATE TABLE order_items (
+   order_item_id serial primary key,
+   order_id integer references orders,
+   product_id integer references products,
+   quantity integer
+);
+-- Insert sample data into products
+INSERT INTO products (product_name, price) VALUES
+('Laptop', 999.99),
+('Smartphone', 599.99),
+('Tablet', 299.99),
+('Headphones', 89.99),
+('Smartwatch', 199.99);
+-- Insert sample data into customers
+INSERT INTO customers (first_name, last_name, email) VALUES
+('John', 'Doe', 'john.doe@example.com'),
+('Jane', 'Roe', 'jane.roe@example.com'),
+('Alice', 'Smith', 'alice.smith@example.com'),
+('Bob', 'Johnson', 'bob.johnson@example.com');
+-- Insert sample data into orders
+INSERT INTO orders (customer_id, order_total) VALUES
+(1, 1189.98),
+(2, 299.99),
+(3, 199.99),
+(1, 599.99);
+-- Insert sample data into order_items
+INSERT INTO order_items (order_id, product_id, quantity) VALUES
+(1, 1, 1),  -- 1 Laptop
+(1, 4, 1),  -- 1 Headphones
+(2, 3, 1),  -- 1 Tablet
+(3, 5, 1),  -- 1 Smartwatch
+(4, 2, 1);  -- 1 Smartphone
+-- Create indexes
+CREATE INDEX idx_product_name ON products (product_name);
+CREATE INDEX idx_customer_names ON customers (first_name, last_name);
+CREATE UNIQUE INDEX idx_unique_order_total ON orders (order_total);
+CREATE INDEX idx_lower_email ON customers (LOWER(email));
+CREATE INDEX idx_order_total_quantity ON orders (order_total);
+CREATE INDEX idx_order_items_quantity ON order_items (quantity);
